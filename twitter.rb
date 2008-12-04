@@ -41,10 +41,11 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
     l = []
     doc.elements.each('/statuses/status') do |e|
       created_at = Time.parse e.text("created_at")
-      break if created_at == @anchor
       temporary_anchor = created_at if temporary_anchor.nil?
+      break if created_at == @anchor
       l << [e.text("user/screen_name"), e.text("text")]
     end
+    alert("#{@anchor} #{temporary_anchor}")
     l.reverse.each { |user,text| render_update user, text }
     @anchor = temporary_anchor
   end
