@@ -52,7 +52,7 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
 
   def send_update user, password, message
     return render_update(SYS_USR, "Your message must have between 3 and 140 chars") if message.size < 3 || message.size > 140 
-    req = twitter_connect(API_URI, {:status => message}) { Net::HTTP::Post.new('/statuses/update.xml') } 
+    req = twitter_connect(API_URI, {:status => message, :source => 'rudolph'}) { Net::HTTP::Post.new('/statuses/update.xml') } 
     if_valid(req) { refresh_updates }
   end
 
