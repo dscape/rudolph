@@ -16,9 +16,9 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
       config_env @db
   end
   
-  def config_env db, first_time=true, user=nil, password=nil
-    user.nil? ? @user = user : @user = ask("username")
-    password.nil? ? @password = password : @password = ask("password")
+  def config_env db, first_time=true
+    @user = ask("username")
+    @password = ask("password")
     db.execute "create table rudolph(user varchar(64), password varchar(64))" if first_time
     db.execute "insert into rudolph(user, password) values (?, ?)", @user, @password
     [@user, @password]
