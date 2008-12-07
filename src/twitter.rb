@@ -3,14 +3,17 @@ require 'net/http'
 require 'rexml/document'
 require 'sqlite3'
 
-SYS_USR = '#APP'
-API_URI = 'twitter.com'
+DEBUG       = true
+SYS_USR     = 'RUDOLPH'
+API_URI     = 'twitter.com'
+VERSION     = '0.2b'
 
 Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => false do
 
   def init
-    @anchor = Time.parse 'Jan 01 2000'
-    @db = SQLite3::Database.new File.join(data_path, "data.db")
+    @anchor = nil
+    database_path = File.join(data_path, "data.db")
+    @db = SQLite3::Database.new database_path
     @db.execute("select user, password from rudolph").first
   rescue Exception
     config_env @db, true
@@ -34,19 +37,19 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
   end
 
   def refresh_updates
-    req = twitter_connect(API_URI) { Net::HTTP::Get.new('/statuses/friends_timeline.xml') }
+    @anchor.nil? ? args = "" : args = "?since_id=#{@anchor}"
+
+    req = twitter_connect(API_URI) { Net::HTTP::Get.new "/statuses/friends_timeline.xml#{args}" }
+
     if_valid(req) do
-      doc = REXML::Document.new(req.body)
-      temporary_anchor = nil
       l = []
-      doc.elements.each('/statuses/status') do |e|
-        created_at = Time.parse e.text("created_at")
-        temporary_anchor = created_at if temporary_anchor.nil?
-        break if created_at == @anchor
+      doc = REXML::Document.new(req.body)
+      elems = doc.elements
+      @anchor = elems[1].text('/statuses/status/id')
+      elems.each('/statuses/status') do |e|
         l << [e.text("user/screen_name"), e.text("text")]
       end
       l.reverse.each { |user,text| render_update user, text }
-      @anchor = temporary_anchor
     end
   end
 
@@ -82,10 +85,14 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
     Dir.mkdir(user_data_directory) unless File.exist?(user_data_directory)    
     return File.join(user_data_directory)
   end
+  
+  def debug_puts group, message
+    puts "#{Time.now} #{SYS_USR}[#{VERSION}] *** (#{group}) #{message}" if DEBUG
+  end
 
   background rgb(154, 228, 232, 1.0)
   stack :margin => 10 do
-    title 'Rudolph', :stroke => white, :align => 'right'
+    caption 'Rudolph', :stroke => white, :align => 'right'
     stack do
       @user, @password = init
       @box = edit_box "", :width => 1.0, :height => 100, :margin => 5
