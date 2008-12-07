@@ -1,15 +1,21 @@
 INSTALATION
 ===========
+## __Download__ [rudolph](http://github.com/dscape/rudolph/zipball/master)
+![Download Rudolph](http://img.skitch.com/20081207-j27c2dm8m4a27dx88mcit551x9.png Download)
 
 Mac Os
 ------
-Run the rudolph.dmg file from release.dmg
+1. __Run__ the _rudolph.dmg__ file located in the _current_release_
 
 
 Windows
 -------
-Create a folder and copy rudolph.exe to it. Make a shortcut, place it in your desktop and run.
+1. Copy the _rudolph.exe_ file to a suitable location. The file is located at the _current_release_ folder.
+2. __Run__ _rudolph.exe_.
+3. Optionally you can make a shortcut and place it in your desktop.
 
 Linux
 -----
-Create a folder and copy rudolph.run to it. Make a shortcut, place it in your desktop and run.
+1. Copy the _rudolph.run_ file to a suitable location. The file is located at the _current_release_ folder.
+2. __Run__ _rudolph.run_.
+3. Optionally you can make a shortcut and place it in your desktop.
