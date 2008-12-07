@@ -84,7 +84,6 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
   end
 
   background rgb(154, 228, 232, 1.0)
-  image "bg.gif", :top => 0, :left => 0
   stack :margin => 10 do
     title 'Rudolph', :stroke => white, :align => 'right'
     stack do
@@ -99,14 +98,3 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
     refresh_updates
   end
 end
-
-# referir url do twitter e como fazer
-# lembrar de eliminar alerts se possivel
-# por tudo command line like things para mudar configs
-# save with security, create private key and encrypt
-# refer better twitter implementations, just a sample
-# simple simple simple
-# make installer
-# create logo
-# skins, easy. use client colors from twitter
-#separate into modules
