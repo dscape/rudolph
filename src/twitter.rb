@@ -1,52 +1,37 @@
-require 'uri'
-require 'net/http'
-require 'rexml/document'
-require 'sqlite3'
+require 'rudolph'
 
-DEBUG       = true
-SYS_USR     = 'RUDOLPH'
-API_URI     = 'twitter.com'
-VERSION     = '0.2b'
-
-Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => false do
+Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH, 
+:height => Rudolph::APP_HEIGHT, :resizable => Rudolph::APP_RESIZABLE do
 
   def init
-    @anchor = nil
-    database_path = File.join(data_path, "data.db")
-    @db = SQLite3::Database.new database_path
-    @db.execute("select user, password from rudolph").first
-  rescue Exception
-    config_env @db, true
+    @dstore = Rudolph::Datastore.new
+    @username, @password = @dstore.get_credentials
+    rescue Exception => e
+      ask_credentials true
   end
-
-  def config_env db, first_time=false
-    @user = ask("username")
-    @password = ask("password")
-    db.execute "create table rudolph(user varchar(64), password varchar(64))" if first_time
-    db.execute "insert into rudolph(user, password) values (?, ?)", @user, @password
-    [@user, @password]
-  end
-
-  def twitter_connect(url, *args)
-    req = yield
-    req.basic_auth(@user, @password)
-    req.set_form_data(args[0]) if req.class.to_s.include?('Post')
-    Net::HTTP.start(url) { |http| http.request(req) }
-  rescue Exception => e
-    render_update SYS_USR, e
+  
+  def ask_credentials first_time=false
+    @username     = ask("Username")
+    @password     = ask("Password")
+    if @username.nil? || @password.nil? || @username.empty? || @password.empty?
+      render_update Rudolph::SYS_USR, Rudolph.message(:invalid_login_pass)
+      ask_credentials first_time
+    else
+      @dstore.insert @username, @password, first_time
+    end
   end
 
   def refresh_updates
     @anchor.nil? ? args = "" : args = "?since_id=#{@anchor}"
 
-    req = twitter_connect(API_URI) { Net::HTTP::Get.new "/statuses/friends_timeline.xml#{args}" }
+    req = Rudolph::HTTP.get @username, @password, "/statuses/friends_timeline.xml#{args}"
 
     if_valid(req) do
       l = []
       doc = REXML::Document.new(req.body)
-      elems = doc.elements
-      @anchor = elems[1].text('/statuses/status/id')
-      elems.each('/statuses/status') do |e|
+      doc.elements.tap do 
+        |elems| @anchor = elems[1].text('/statuses/status/id') 
+      end.each('/statuses/status') do |e|
         l << [e.text("user/screen_name"), e.text("text")]
       end
       l.reverse.each { |user,text| render_update user, text }
@@ -54,16 +39,27 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
   end
 
   def send_update user, password, message
-    return render_update(SYS_USR, "Your message must have between 3 and 140 chars") if message.size < 3 || message.size > 140 
-    req = twitter_connect(API_URI, {:status => message, :source => 'rudolph'}) { Net::HTTP::Post.new('/statuses/update.xml') } 
-    if_valid(req) { refresh_updates }
+    if message.size < 3 || message.size > 140 
+      return render_update Rudolph::SYS_USR, Rudolph.message(:invalid_update_size)
+    end
+    req = Rudolph::HTTP.post @username, @password, message, '/statuses/update.xml'
+    
+    if_valid(req) do
+      doc = REXML::Document.new(req.body)
+      @anchor = doc.text('/status/id')
+      render_update user, message
+    end
   end
 
   def render_update user, message
     @gui_status.prepend do
-      stack  :margin => 10  do
-        user == SYS_USR ? background("#ddd", :curve => 12) : background("#fff", :curve => 12)
-        para strong(user, :stroke => blue), ' ', message, :margin => 10
+      stack  :margin => Rudolph::UPDT_MARGIN  do
+        if user == Rudolph::SYS_USR
+          background "#eee", :curve => Rudolph::UPDT_CURVE
+        else
+          background "#fff",    :curve => Rudolph::UPDT_CURVE
+        end
+        para strong(user, :stroke => "#00f"), ' ', message, :margin => Rudolph::UPDT_PMARGIN
       end
     end
   end
@@ -73,35 +69,26 @@ Shoes.app :title => "Rudolph", :width => 450, :height => 600, :resizable => fals
     when Net::HTTPSuccess, Net::HTTPRedirection
       yield
     when Net::HTTPClientError
-      render_update SYS_USR, "authentication failed (#{request.code})"
-      config_env @db
+      render_update Rudolph::SYS_USR, Rudolph.message(:authentication_failed)
+      ask_credentials
     when Net::HTTPServerError
-      render_update SYS_USR, "server is not responding (#{request.code})"
+      render_update SYS_USR, Rudolph.message(:server_not_responding)
     end
-  end
-
-  def data_path
-    RUBY_PLATFORM =~ /win32/ ? user_data_directory = File.expand_path(Dir.getwd) : user_data_directory = File.expand_path(File.join("~", ".rudolph"))
-    Dir.mkdir(user_data_directory) unless File.exist?(user_data_directory)    
-    return File.join(user_data_directory)
-  end
-  
-  def debug_puts group, message
-    puts "#{Time.now} #{SYS_USR}[#{VERSION}] *** (#{group}) #{message}" if DEBUG
   end
 
   background rgb(154, 228, 232, 1.0)
-  stack :margin => 10 do
-    caption 'Rudolph', :stroke => white, :align => 'right'
+  stack :margin => Rudolph::MAIN_MARGIN do
+    caption Rudolph::SYS_USR, :stroke => "#fff", :align => 'right'
     stack do
-      @user, @password = init
-      @box = edit_box "", :width => 1.0, :height => 100, :margin => 5
-      button("update") { send_update(@user, @password, @box.text); @box.text = ""  }
+      @box = edit_box "", :width => Rudolph::STACKS_WIDTH, :height => Rudolph::UPDTBOX_HEIGHT, :margin => Rudolph::STACKS_MARGIN
+      button("update") { send_update(@username, @password, @box.text); @box.text = ""  }
     end
-    stack :width => 1.0, :height => 380, :scroll => true, :margin => 5 do
+    stack :width => Rudolph::STACKS_WIDTH, :height => Rudolph::MSGSTACK_HEIGHT, :scroll => true, :margin => Rudolph::STACKS_MARGIN do
       @gui_status = stack :margin_right => gutter
     end
-    every(60) { |i| refresh_updates }
-    refresh_updates
+    every(60) { refresh_updates }
   end
+  
+  init
+  refresh_updates
 end
