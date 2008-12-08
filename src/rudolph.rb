@@ -14,25 +14,25 @@ class Rudolph
   TWITTER_SRC   = 'rudolph'
   API_URI       = 'twitter.com'
   VERSION       = '0.2b'
-  
+
   SQL_TABLE     = "rudolph"
-  
+
   APP_WIDTH     = 450
   APP_HEIGHT    = 600
   APP_RESIZABLE = false
-  
+
   UPDT_MARGIN   = 10
   UPDT_CURVE    = 12
   UPDT_PMARGIN  = 10
-  
+
   MAIN_MARGIN   = 10
-  
+
   STACKS_WIDTH  = 1.0
   STACKS_MARGIN = 5
-  
+
   UPDTBOX_HEIGHT  = 100
   MSGSTACK_HEIGHT = 380
-  
+
   MESSAGES      = {
     :invalid_update_size   => "Your message must have between 3 and 140 chars",
     :authentication_failed => "Authentication failed",
@@ -40,10 +40,20 @@ class Rudolph
     :invalid_login_pass    => "Either login or password was blank."
   }
 
+  DEF_THEME = { 
+    :background     => "#9AE4E8", 
+    :text           => "#000000",
+    :link           => "#0000FF",
+    :sidebar        => "#EEEEEE",
+    :sidebar_border => "#DDDDDD",
+    :image          => nil, 
+    :image_tile     => false
+  }
+
   def self.debug_puts message, group="main"
     puts "#{Time.now} #{SYS_USR}[#{VERSION}] *** (#{group}) #{message}" if DEBUG
   end
-  
+
   def self.message key
     MESSAGES[key]
   end

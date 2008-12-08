@@ -12,7 +12,6 @@ class Rudolph
     
     def store_credentials username, password, first_time
       Rudolph::Crypt.generate_keys(data_path) if first_time
-      puts "#{cipher.encrypt_string(password)}******#{password}"
       File.open(@path, 'w') { |f| YAML::dump([username, cipher.encrypt_string(password)], f) }
     end
 

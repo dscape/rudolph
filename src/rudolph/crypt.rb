@@ -21,10 +21,12 @@ class Rudolph
       rsa_path = File.join(data_path, 'rsa')
       privkey  = File.join(rsa_path, 'id_rsa')
       pubkey   = File.join(rsa_path, 'id_rsa.pub')
-      keypair  = OpenSSL::PKey::RSA.generate(1024)
-      Dir.mkdir(rsa_path) unless File.exist?(rsa_path)
-      File.open(privkey, 'w') { |f| f.write keypair.to_pem } unless File.exists? privkey
-      File.open(pubkey, 'w') { |f| f.write keypair.public_key.to_pem } unless File.exists? pubkey
+      unless File.exists?(privkey) || File.exists?(pubkey)
+        keypair  = OpenSSL::PKey::RSA.generate(1024)
+        Dir.mkdir(rsa_path) unless File.exist?(rsa_path)
+        File.open(privkey, 'w') { |f| f.write keypair.to_pem } unless File.exists? privkey
+        File.open(pubkey, 'w') { |f| f.write keypair.public_key.to_pem } unless File.exists? pubkey
+      end
     end
 
     private
