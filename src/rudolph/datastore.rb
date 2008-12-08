@@ -1,18 +1,19 @@
-require 'sqlite3'
+require 'yaml'
 
 class Rudolph
   class Datastore    
     def initialize
-      @db = SQLite3::Database.new File.join(data_path, "data.db")
+      @path = File.join(data_path, "data.yml")
     end
     
     def get_credentials
-      @db.execute("select user, password from #{Rudolph::SQL_TABLE}").first.map { |u,p| [u,cipher.decrypt_string(p)]}
+      YAML::load_file(@path).tap { |a| a[1] = cipher.decrypt_string a[1] }
     end
     
-    def insert username, password, first_time
-      @db.execute "create table #{Rudolph::SQL_TABLE}(user varchar(256), password varchar(256))" if first_time
-      @db.execute "insert into rudolph(user, password) values (?, ?)", username, cipher.encrypt_string(password)
+    def store_credentials username, password, first_time
+      Rudolph::Crypt.generate_keys(data_path) if first_time
+      puts "#{cipher.encrypt_string(password)}******#{password}"
+      File.open(@path, 'w') { |f| YAML::dump([username, cipher.encrypt_string(password)], f) }
     end
 
     def data_path
@@ -22,7 +23,7 @@ class Rudolph
     end
 
     def cipher
-      @cipher||=Rudolph::Crypt.new(Digest::SHA1.hexdigest(data_path))
+      @cipher||=Rudolph::Crypt.new data_path
     end
 
   end

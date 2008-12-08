@@ -17,7 +17,7 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       render_update Rudolph::SYS_USR, Rudolph.message(:invalid_login_pass)
       ask_credentials first_time
     else
-      @dstore.insert @username, @password, first_time
+      @dstore.store_credentials @username, @password, first_time
     end
   end
 
