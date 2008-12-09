@@ -1,7 +1,7 @@
 class Rudolph
   class HTTP
-    OPEN_TIMEOUT = 3
-    READ_TIMEOUT = 3
+    OPEN_TIMEOUT = 2
+    READ_TIMEOUT = 2
 
     def self.get path, username, password
       Rudolph::HTTP.connect(Rudolph::API_URI, username, password) do

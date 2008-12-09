@@ -85,9 +85,9 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       if token =~ /((http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
         %Q(link("#{token }", :click => "#{token}", :stroke => @theme[:link]), ' ')
       elsif token =~ /@[a-z0-9_]+/i
-        %Q(\"@\", link("#{token.gsub('@','')}", :click => "http://www.twitter.com/#{token.gsub('@','')}", :stroke => @theme[:link]), ' ')
+        %Q(\"@\", link("#{token.gsub(/[^a-z0-9_]/i, '')}", :click => "http://www.twitter.com/#{token.gsub(/[^a-z0-9_]/i, '')}", :stroke => @theme[:link]), ' ')
       elsif token =~ /#[a-z0-9_]+/i
-        %Q(\"\#\", link("#{token.gsub('#','')}", :click => "http://www.hashtags.org/tag/#{token.gsub('#','')}", :stroke => @theme[:link]), ' ')
+        %Q(\"\#\", link("#{token.gsub(/[^a-z0-9_]/i,'')}", :click => "http://www.hashtags.org/tag/#{token.gsub(/[^a-z0-9_]/i,'')}", :stroke => @theme[:link]), ' ')
       else
         "\"#{token} \""
       end

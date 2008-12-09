@@ -19,7 +19,7 @@ class Rudolph
   SQL_TABLE     = "rudolph"
 
   APP_WIDTH     = 450
-  APP_HEIGHT    = 600
+  APP_HEIGHT    = 565
   APP_RESIZABLE = false
 
   UPDT_MARGIN   = 10
