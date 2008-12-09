@@ -12,6 +12,7 @@ class Rudolph
   DEBUG         = true
   SYS_USR       = 'Rudolph'
   TWITTER_SRC   = 'rudolph'
+  TWITTER_LIMIT = 140
   API_URI       = 'twitter.com'
   VERSION       = '0.2b'
 
@@ -34,7 +35,7 @@ class Rudolph
   MSGSTACK_HEIGHT = 380
 
   MESSAGES      = {
-    :invalid_update_size   => "Your message must have between 3 and 140 chars",
+    :invalid_update_size   => "Your message must have between 2 and 140 chars",
     :authentication_failed => "Authentication failed",
     :server_not_responding => "Server is not responding",
     :invalid_login_pass    => "Either login or password was blank."
@@ -49,10 +50,6 @@ class Rudolph
     :image          => nil, 
     :image_tile     => false
   }
-
-  def self.debug_puts message, group="main"
-    puts "#{Time.now} #{SYS_USR}[#{VERSION}] *** (#{group}) #{message}" if DEBUG
-  end
 
   def self.message key
     MESSAGES[key]

@@ -12,7 +12,7 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
 
   def ask_credentials first_time=false
     @username     = ask("Username")
-    @password     = ask("Password")
+    @password     = ask("Password", :secret => true)
     if @username.nil? || @password.nil? || @username.empty? || @password.empty?
       alert Rudolph::SYS_USR, Rudolph.message(:invalid_login_pass)
       ask_credentials first_time
@@ -32,24 +32,26 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       l = []
       doc = REXML::Document.new(req.body)
       doc.elements.tap do 
-        |elems| @anchor = elems[1].text('/statuses/status/id') 
+        |elems| @anchor = elems[1].text('/statuses/status/id') if elems[1].text('/statuses/status/id').is_a?(String)
       end.each('/statuses/status') do |e|
         l << [e.text("user/screen_name"), e.text("text")]
       end
       l.reverse.each { |user,text| render_update user, text }
     end
+    debug @anchor
   end
 
   def send_update user, password, message
     if message.size < 3 || message.size > 140 
-      return render_update Rudolph::SYS_USR, Rudolph.message(:invalid_update_size)
-    end
-    req = Rudolph::HTTP.post '/statuses/update.xml', @username, @password, message
+      render_update Rudolph::SYS_USR, Rudolph.message(:invalid_update_size)
+    else
+      req = Rudolph::HTTP.post '/statuses/update.xml', @username, @password, message
 
-    if_valid(req) do
-      doc = REXML::Document.new(req.body)
-      @anchor = doc.text('/status/id')
-      render_update user, message
+      if_valid(req) do
+        doc = REXML::Document.new(req.body)
+        @anchor = doc.text('/status/id')
+        render_update user, message
+      end
     end
   end
 
@@ -67,7 +69,7 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
   end
   
   def process_links message
-    message.split.map do |token|
+    message.gsub("\"","'").split.map do |token|
       if token =~ /((http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
         %Q(link("#{token }", :click => "#{token}", :stroke => @theme[:link]), ' ')
       elsif token =~ /@[a-z0-9_]+/i
@@ -91,18 +93,25 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       render_update SYS_USR, Rudolph.message(:server_not_responding)
     end
   end
+  
+  def set_chr_size char_count=Rudolph::TWITTER_LIMIT.to_s, strk=@theme[:text]
+    @chr_size.replace char_count, :stroke => strk, :align => 'right'
+  end
 
   init
   update_theme
 
-
   background @theme[:background]
   #image @theme[:image] unless @theme[:image].nil? 
   stack :margin => Rudolph::MAIN_MARGIN do
-    caption Rudolph::SYS_USR, :stroke => @theme[:text], :align => 'right'
+    @chr_size = caption Rudolph::TWITTER_LIMIT.to_s, :stroke => @theme[:text], :align => 'right'
     stack do
-      @box = edit_box "", :width => Rudolph::STACKS_WIDTH, :height => Rudolph::UPDTBOX_HEIGHT, :margin => Rudolph::STACKS_MARGIN
-      button("update") { send_update(@username, @password, @box.text); @box.text = ""  }
+      @box = edit_box("", :width => Rudolph::STACKS_WIDTH, :height => Rudolph::UPDTBOX_HEIGHT, :margin => Rudolph::STACKS_MARGIN) do
+        remaining = Rudolph::TWITTER_LIMIT - @box.text.length
+        remaining < 21 ? strk = @theme[:link] : strk = @theme[:text]
+        set_chr_size remaining.to_s, strk
+      end
+      button("update") { send_update(@username, @password, @box.text); @box.text = ""; set_chr_size }
     end
     stack :width => Rudolph::STACKS_WIDTH, :height => Rudolph::MSGSTACK_HEIGHT, :scroll => true, :margin => Rudolph::STACKS_MARGIN do
       @gui_status = stack :margin_right => gutter
