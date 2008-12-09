@@ -38,12 +38,12 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       end
       l.reverse.each { |user,text| render_update user, text }
     end
-    debug @anchor
   end
 
   def send_update user, password, message
     if message.size < 3 || message.size > 140 
       render_update Rudolph::SYS_USR, Rudolph.message(:invalid_update_size)
+      return message
     else
       req = Rudolph::HTTP.post '/statuses/update.xml', @username, @password, message
 
@@ -52,6 +52,7 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
         @anchor = doc.text('/status/id')
         render_update user, message
       end
+      return ""
     end
   end
 
@@ -94,8 +95,10 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     end
   end
   
-  def set_chr_size char_count=Rudolph::TWITTER_LIMIT.to_s, strk=@theme[:text]
-    @chr_size.replace char_count, :stroke => strk, :align => 'right'
+  def set_chr_size char_count
+    remaining = Rudolph::TWITTER_LIMIT - char_count
+    remaining < 21 ? strk = @theme[:link] : strk = @theme[:text]
+    @chr_size.replace remaining, :stroke => strk, :align => 'right'
   end
 
   init
@@ -107,11 +110,9 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     @chr_size = caption Rudolph::TWITTER_LIMIT.to_s, :stroke => @theme[:text], :align => 'right'
     stack do
       @box = edit_box("", :width => Rudolph::STACKS_WIDTH, :height => Rudolph::UPDTBOX_HEIGHT, :margin => Rudolph::STACKS_MARGIN) do
-        remaining = Rudolph::TWITTER_LIMIT - @box.text.length
-        remaining < 21 ? strk = @theme[:link] : strk = @theme[:text]
-        set_chr_size remaining.to_s, strk
+        set_chr_size @box.text.length
       end
-      button("update") { send_update(@username, @password, @box.text); @box.text = ""; set_chr_size }
+      button("update") { @box.text = send_update(@username, @password, @box.text); set_chr_size(@box.text.length) }
     end
     stack :width => Rudolph::STACKS_WIDTH, :height => Rudolph::MSGSTACK_HEIGHT, :scroll => true, :margin => Rudolph::STACKS_MARGIN do
       @gui_status = stack :margin_right => gutter
