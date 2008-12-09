@@ -1,6 +1,6 @@
 INSTALATION
 ===========
-## __Download__ [rudolph](http://github.com/dscape/rudolph/zipball/master)
+## __Download__ [rudolph](http://nunojobpinto.googlepages.com/rudolph_v0.3b.zip)
 
 Mac Os
 ------
@@ -19,3 +19,9 @@ Linux
 1. __Copy__ the _rudolph.run_ file to a suitable location. The file is located at the *current_release* folder.
 2. __Run__ _rudolph.run_.
 3. Optionally you can make a shortcut and place it in your desktop.
+
+BUGS AND FEEDBACK
+=================
+Please sent any bug and feedback to me. You can find my email information on [about.nunojob.com](http://about.nunojob.com)
+
+Thank you :)
