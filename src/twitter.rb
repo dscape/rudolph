@@ -61,9 +61,21 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
         else
           background "#fff", :curve => Rudolph::UPDT_CURVE
         end
-        para strong(user, :stroke => @theme[:link]), ' ', message, :margin => Rudolph::UPDT_PMARGIN
+        eval "para strong(user, :stroke => @theme[:link]), \" \", #{process_links message}, :margin => Rudolph::UPDT_PMARGIN"
       end
     end
+  end
+  
+  def process_links message
+    message.split.map do |token|
+      if token =~ /((http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
+        %Q(link("#{token }", :click => "#{token}", :stroke => @theme[:link]), ' ')
+      elsif token =~ /@[a-z0-9_]+/i
+        %Q(\"@\", link("#{token.gsub('@','')}", :click => "http://www.twitter.com/#{token.gsub('@','')}", :stroke => @theme[:link]), ' ')
+      else
+        "\"#{token} \""
+      end
+    end.join(', ')
   end
 
   def if_valid(request)    
