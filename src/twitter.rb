@@ -8,6 +8,7 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     @username, @password = @dstore.get_credentials
   rescue Exception => e
     ask_credentials true
+    warn e
   end
 
   def ask_credentials first_time=false
@@ -23,6 +24,9 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
 
   def update_theme
     @theme = Rudolph::HTTP.get_theme @username
+  rescue Exception => e
+    @theme = Rudolph::DEF_THEME
+    warn e
   end
 
   def refresh_updates
@@ -38,6 +42,9 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       end
       l.reverse.each { |user,text| render_update user, text }
     end
+  rescue Exception => e
+    render_update Rudolph::SYS_USR, Rudolph.message(:network_problem)
+    warn e
   end
 
   def send_update user, password, message
@@ -54,6 +61,10 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       end
       return ""
     end
+    rescue Exception => e
+      render_update Rudolph::SYS_USR, Rudolph.message(:network_problem)
+      warn e
+      return message
   end
 
   def render_update user, message

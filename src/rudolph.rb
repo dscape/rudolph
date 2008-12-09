@@ -38,7 +38,9 @@ class Rudolph
     :invalid_update_size   => "Your message must have between 2 and 140 chars",
     :authentication_failed => "Authentication failed",
     :server_not_responding => "Server is not responding",
-    :invalid_login_pass    => "Either login or password was blank."
+    :invalid_login_pass    => "Either login or password was blank.",
+    :could_not_load_theme  => "Couldn't load your preferences. Are you sure your connected to the internet?",
+    :network_problem       => "Couldn't connect to the internet"
   }
 
   DEF_THEME = { 

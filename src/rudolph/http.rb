@@ -1,5 +1,8 @@
 class Rudolph
   class HTTP
+    OPEN_TIMEOUT = 3
+    READ_TIMEOUT = 3
+
     def self.get path, username, password
       Rudolph::HTTP.connect(Rudolph::API_URI, username, password) do
         Net::HTTP::Get.new path
@@ -13,8 +16,12 @@ class Rudolph
     end
     
     def self.get_theme username
-      req  = Net::HTTP.get URI.parse("http://twitter.com/users/show/#{username}.xml")
-      doc  = REXML::Document.new(req)
+      req = Net::HTTP.start(Rudolph::API_URI) do |http| 
+        http.open_timeout = OPEN_TIMEOUT
+        http.read_timeout = READ_TIMEOUT
+        http.request Net::HTTP::Get.new("/users/show/#{username}.xml")
+      end
+      doc  = REXML::Document.new(req.body)
       text = doc.text('/user/profile_text_color')
       bg   = doc.text('/user/profile_background_color')
       link = doc.text('/user/profile_link_color')
@@ -41,7 +48,11 @@ class Rudolph
       req = yield
       req.basic_auth username, password
       req.set_form_data(args[0]) if req.class.to_s.include?('Post')
-      Net::HTTP.start(url) { |http| http.request(req) }
+      Net::HTTP.start(url) do |http|
+        http.open_timeout = OPEN_TIMEOUT
+        http.read_timeout = READ_TIMEOUT
+        http.request(req) 
+      end
     end
   end
 end
