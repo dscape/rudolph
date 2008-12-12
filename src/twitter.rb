@@ -1,4 +1,4 @@
-require 'rudolph'
+require 'lib/rudolph'
 
 Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH, 
 :height => Rudolph::APP_HEIGHT, :resizable => Rudolph::APP_RESIZABLE do
@@ -8,16 +8,13 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     @username, @password = @dstore.get_credentials
   rescue Exception => e
     ask_credentials true
-    warn e
+    Rudolph.dputs 'warn', e
   end
 
   def ask_credentials first_time=false
     @username     = ask("Username")
     @password     = ask("Password", :secret => true)
-    if @username.nil? || @password.nil? || @username.empty? || @password.empty?
-      alert Rudolph::SYS_USR, Rudolph.message(:invalid_login_pass)
-      ask_credentials first_time
-    else
+    unless @username.nil? || @password.nil? || @username.empty? || @password.empty?
       @dstore.store_credentials @username, @password, first_time
     end
   end
@@ -25,8 +22,8 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
   def update_theme
     @theme = Rudolph::HTTP.get_theme @username
   rescue Exception => e
+    Rudolph.dputs 'warn', e
     @theme = Rudolph::DEF_THEME
-    warn e
   end
 
   def refresh_updates
@@ -44,26 +41,32 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     end
   rescue Exception => e
     render_update Rudolph::SYS_USR, Rudolph.message(:network_problem)
-    warn e
+    Rudolph.dputs 'warn', e
   end
 
   def send_update user, password, message
     if message.size < 3 || message.size > 140 
       render_update Rudolph::SYS_USR, Rudolph.message(:invalid_update_size)
+      Rudolph.dputs 'info',  Rudolph.message(:invalid_update_size)
       return message
     else
       req = Rudolph::HTTP.post '/statuses/update.xml', @username, @password, message
 
       if_valid(req) do
-        doc = REXML::Document.new(req.body)
-        @anchor = doc.text('/status/id')
-        render_update user, message
+        if message =~ /^(d) ([a-z0-9_]+) (.*)/i
+          render_update(Rudolph::SYS_USR, Rudolph.message(:direct_msg_sent) + ' ' + message.gsub(/(d) ([a-z0-9_]+) (.*)/i,'\2') + ' at ' + Rudolph::Util.time_now)
+          Rudolph.dputs 'info', Rudolph.message(:direct_msg_sent)
+        else
+          doc = REXML::Document.new(req.body)
+          @anchor = doc.text('/status/id')
+          render_update user, message
+        end
       end
       return ""
     end
     rescue Exception => e
       render_update Rudolph::SYS_USR, Rudolph.message(:network_problem)
-      warn e
+      Rudolph.dputs 'warn', e
       return message
   end
 
@@ -85,9 +88,9 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       if token =~ /((http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
         %Q(link("#{token }", :click => "#{token}", :stroke => @theme[:link]), ' ')
       elsif token =~ /@[a-z0-9_]+/i
-        %Q(\"@\", link("#{token.gsub(/[^a-z0-9_]/i, '')}", :click => "http://www.twitter.com/#{token.gsub(/[^a-z0-9_]/i, '')}", :stroke => @theme[:link]), ' ')
+        %Q(\"@\", link("#{token.delete("@.:")}", :click => "http://www.twitter.com/#{token.delete("@.:")}", :stroke => @theme[:link]), ' ')
       elsif token =~ /#[a-z0-9_]+/i
-        %Q(\"\#\", link("#{token.gsub(/[^a-z0-9_]/i,'')}", :click => "http://www.hashtags.org/tag/#{token.gsub(/[^a-z0-9_]/i,'')}", :stroke => @theme[:link]), ' ')
+        %Q(\"\#\", link("#{token.delete("#.:")}", :click => "http://www.hashtags.org/tag/#{token..delete("#.:")}", :stroke => @theme[:link]), ' ')
       else
         "\"#{token} \""
       end
@@ -100,9 +103,11 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       yield
     when Net::HTTPClientError
       render_update Rudolph::SYS_USR, Rudolph.message(:authentication_failed)
+      Rudolph.dputs 'warn', Rudolph.message(:authentication_failed)
       ask_credentials
     when Net::HTTPServerError
       render_update SYS_USR, Rudolph.message(:server_not_responding)
+      Rudolph.dputs 'warn', Rudolph.message(:server_not_responding)
     end
   end
   
@@ -110,6 +115,11 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     remaining = Rudolph::TWITTER_LIMIT - char_count
     remaining < 21 ? strk = @theme[:link] : strk = @theme[:text]
     @chr_size.replace remaining, :stroke => strk, :align => 'right'
+  end
+  
+  def proper_update
+    @box.text = send_update @username, @password, @box.text
+    set_chr_size @box.text.length
   end
 
   init
@@ -123,13 +133,14 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
       @box = edit_box("", :width => Rudolph::STACKS_WIDTH, :height => Rudolph::UPDTBOX_HEIGHT, :margin => Rudolph::STACKS_MARGIN) do
         set_chr_size @box.text.length
       end
-      button("update") { @box.text = send_update(@username, @password, @box.text); set_chr_size(@box.text.length) }
+        button("update") { proper_update }
     end
     stack :width => Rudolph::STACKS_WIDTH, :height => Rudolph::MSGSTACK_HEIGHT, :scroll => true, :margin => Rudolph::STACKS_MARGIN do
       @gui_status = stack :margin_right => gutter
     end
     every(60) { refresh_updates }
   end
-  
+
+  keypress { |k| proper_update if (k == :enter) or (k == "\n") }
   refresh_updates
 end

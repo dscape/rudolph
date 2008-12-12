@@ -3,10 +3,10 @@ require 'net/http'
 require 'rexml/document'
 require 'sha1'
 
-require 'rudolph/util'
-require 'rudolph/crypt'
-require 'rudolph/datastore'
-require 'rudolph/http'
+require 'lib/rudolph/crypt'
+require 'lib/rudolph/datastore'
+require 'lib/rudolph/http'
+require 'lib/rudolph/util'
 
 class Rudolph
   DEBUG         = true
@@ -40,7 +40,8 @@ class Rudolph
     :server_not_responding => "Server is not responding",
     :invalid_login_pass    => "Either login or password was blank.",
     :could_not_load_theme  => "Couldn't load your preferences. Are you sure your connected to the internet?",
-    :network_problem       => "Couldn't connect to the internet"
+    :network_problem       => "Couldn't connect to the internet",
+    :direct_msg_sent       => "Sending direct message to"
   }
 
   DEF_THEME = { 
@@ -55,6 +56,10 @@ class Rudolph
 
   def self.message key
     MESSAGES[key]
+  end
+  
+  def self.dputs level, message
+    send level, Rudolph::Util.time_now + '***' + message
   end
 end
 
