@@ -28,9 +28,9 @@ Thank you :)
 
 Known Issues
 ============
-- Add internationalization (http://reinventar.com/2009/03/baseapp-orange-updated-with-basic-pages-and-i18n-support)
-- Migrate configuration to file
-- Remove problems with xp and openssl
-- Click name gets reply
-- Implement Favorite and delete update
-- Finish the flip text update
+- No internationalization (http://reinventar.com/2009/03/baseapp-orange-updated-with-basic-pages-and-i18n-support)
+- No configuration file, must change settings in code
+- Problems with Windows and openssl. Meaning does not work in Windows
+- Click name should allow easy reply
+- No Favorite and delete for updates
+- Flip Text update is incomplete

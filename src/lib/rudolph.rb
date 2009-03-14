@@ -36,7 +36,7 @@ class Rudolph
 
   # eggs
   # default is false
-  INVERT_TEXT      = true
+  INVERT_TEXT      = false
   # default is twitter.com/
   DEF_PROFILE_PAGE = "http://cursebird.com/"
   # default is hashtags.org/tag/
