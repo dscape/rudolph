@@ -25,3 +25,12 @@ BUGS AND FEEDBACK
 Please sent any bug and feedback to me. You can find my email information on [about.nunojob.com](http://about.nunojob.com)
 
 Thank you :)
+
+Known Issues
+============
+- Add internationalization (http://reinventar.com/2009/03/baseapp-orange-updated-with-basic-pages-and-i18n-support)
+- Migrate configuration to file
+- Remove problems with xp and openssl
+- Click name gets reply
+- Implement Favorite and delete update
+- Finish the flip text update

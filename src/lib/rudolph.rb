@@ -34,6 +34,14 @@ class Rudolph
   UPDTBOX_HEIGHT  = 100
   MSGSTACK_HEIGHT = 380
 
+  # eggs
+  # default is false
+  INVERT_TEXT      = true
+  # default is twitter.com/
+  DEF_PROFILE_PAGE = "http://cursebird.com/"
+  # default is hashtags.org/tag/
+  DEF_HASHTAG_PAGE = "http://www.hashtags.org/tag/"
+
   MESSAGES      = {
     :invalid_update_size   => "Your message must have between 2 and 140 chars",
     :authentication_failed => "Authentication failed",

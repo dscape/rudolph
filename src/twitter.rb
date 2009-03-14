@@ -84,13 +84,14 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
   end
   
   def process_links message
-    message.gsub("\"","'").split.map do |token|
+    message.gsub("\"","'").gsub("&amp;","&").gsub("&lt;","<").gsub("&gt;",">").gsub("&quot;","'").gsub("&apos;","'").split.map do |token|
+      token = fliptext(token) if Rudolph::INVERT_TEXT
       if token =~ /((http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
         %Q(link("#{token }", :click => "#{token}", :stroke => @theme[:link]), ' ')
       elsif token =~ /@[a-z0-9_]+/i
-        %Q(\"@\", link("#{token.delete("@.:")}", :click => "http://www.twitter.com/#{token.delete("@.:")}", :stroke => @theme[:link]), ' ')
+        %Q(\"@\", link("#{token.delete("@.:")}", :click => "#{Rudolph::DEF_PROFILE_PAGE + token.delete("@.:")}", :stroke => @theme[:link]), ' ')
       elsif token =~ /#[a-z0-9_]+/i
-        %Q(\"\#\", link("#{token.delete("#.:")}", :click => "http://www.hashtags.org/tag/#{token.delete("#.:")}", :stroke => @theme[:link]), ' ')
+        %Q(\"\#\", link("#{token.delete("#.:")}", :click => "#{Rudolph::DEF_HASHTAG_PAGE + token.delete("#.:")}", :stroke => @theme[:link]), ' ')
       else
         "\"#{token} \""
       end
@@ -115,6 +116,49 @@ Shoes.app :title => Rudolph::SYS_USR, :width => Rudolph::APP_WIDTH,
     remaining = Rudolph::TWITTER_LIMIT - char_count
     remaining < 21 ? strk = @theme[:link] : strk = @theme[:text]
     @chr_size.replace remaining, :stroke => strk, :align => 'right'
+  end
+  
+  def fliptext text
+    # flip text egg
+    # ref: http://stackoverflow.com/questions/144380/ruby-how-to-break-a-potentially-unicode-string-into-bytes
+    # a => '\u0250'
+    # b => 'q'
+    # c => '\u0254'  
+    # d => 'p'
+    # e => '\u01DD'
+    # f => '\u025F' 
+    # g => 'b'
+    # h => '\u0265'
+    # i => '\u0131'//'\u0131\u0323' 
+    # j => '\u0638'
+    # k => '\u029E'
+    # l => '1'
+    # m => '\u026F'
+    # n => 'u'
+    # o => 'o'
+    # p => 'd'
+    # q => 'b'
+    # r => '\u0279'
+    # s => 's'
+    # t => '\u0287'
+    # u => 'n'
+    # v => '\u028C'
+    # w => '\u028D'
+    # x => 'x'
+    # y => '\u028E'
+    # z => 'z'
+    # [ => ']'
+    # ] => '['
+    # ( => ')'
+    # ) => '('
+    # { => '}'
+    # } => '{'
+    # ? => '\u00BF'  
+    # ! => '\u00A1'
+    # ' => ','
+    # , => '''
+    # x => x  	
+    text
   end
   
   def proper_update
